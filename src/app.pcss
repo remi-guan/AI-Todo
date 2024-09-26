@@ -1,0 +1,35 @@
+/* Write your global styles here, in PostCSS syntax */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
+html, body {
+  height: 100vh;
+}
+
+.input input::placeholder {
+  opacity: 0.5;
+}
+
+/* Remove the default focus outline from the input fields */
+:focus,
+:focus-within {
+  outline-style: none !important;
+}
+
+/* Set the default font-awesome icon size to 18px */
+i {
+  font-size: 18px;
+}
