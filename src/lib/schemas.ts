@@ -8,18 +8,19 @@ export const StepSchema = z.object({
   moneyCost: z.number().optional(),
   timeCost: z.number().optional(),
   suggestionAdjustA: z.string().optional(),
-  suggestionAdjustB: z.string().optional(),
+  suggestionAdjustB: z.string().optional()
 });
 
 export const InfoSchema = z.object({
   title: z.string(),
+  icon: z.string(),
   category: z.string(),
-  type: z.string(),
-})
+  type: z.string()
+});
 
 export const ResponseSchema = z.object({
   info: InfoSchema,
-  steps: z.array(StepSchema),
+  steps: z.array(StepSchema)
 });
 
 export type Step = z.infer<typeof StepSchema>;

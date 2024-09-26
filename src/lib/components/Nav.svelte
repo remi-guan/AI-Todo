@@ -8,7 +8,7 @@
     </label>
   </div>
   <div class="navbar-center">
-    <a class="text-xl font-bold" href="/">{document.title}</a>
+    <a class="text-xl font-bold" href="/">AI Todo</a>
   </div>
   <div class="navbar-end gap-2">
   </div>

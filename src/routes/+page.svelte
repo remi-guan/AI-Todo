@@ -7,6 +7,8 @@
   let stepIndex = $state(0);
   let userPrompt = $state('');
 
+  let cards: HTMLDivElement[] = $state([]);
+
   let info: Info | undefined = $state();
   let steps: Step[] = $state([]);
 
@@ -18,7 +20,9 @@
 
   onMount(() => {
     fetchResponse();
+  });
 
+  $effect(() => {
     const options = {
       root: null,
       threshold: 0.5 // Trigger when 50% of the card is visible
@@ -27,16 +31,12 @@
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          const index = steps.findIndex(step => step.title === entry.target.id);
-          if (index !== -1) {
-            stepIndex = index; // Update the stepIndex based on the visible card
-          }
+          stepIndex = Number((entry.target as HTMLDivElement).dataset.index ?? 0);
         }
       });
     }, options);
 
     // Observe each ResultCard
-    const cards = document.querySelectorAll('.card');
     cards.forEach(card => observer.observe(card));
   });
 </script>
@@ -50,9 +50,16 @@
 </button>
 
 <div class="flex flex-col gap-6">
+  {#if info}
+    <h1 class="text-3xl font-bold">{info.title} {info.icon}</h1>
+  {/if}
   <ul class="steps">
     {#each steps as step, index}
-      <li data-content={step.icon} class="step" class:step-info={stepIndex === index}>
+      <li
+        data-content={step.icon}
+        class="step"
+        class:step-info={stepIndex === index}
+        class:text-primary={stepIndex === index}>
         {step.title}
       </li>
     {/each}
@@ -60,8 +67,10 @@
 
   <div class="w-full overflow-scroll snap-x snap-mandatory scroll-auto no-scrollbar">
     <section class="flex gap-36 justify-between w-fit">
-      {#each steps as step}
-        <ResultCard {...step} />
+      {#each steps as step, i}
+        <div bind:this={cards[i]} data-index={i} class="result-card">
+          <ResultCard {...step} />
+        </div>
       {/each}
     </section>
   </div>
