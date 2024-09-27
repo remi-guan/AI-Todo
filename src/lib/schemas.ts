@@ -4,18 +4,16 @@ export const StepSchema = z.object({
   title: z.string(),
   icon: z.string(),
   details: z.string(),
-  completed: z.boolean().optional(),
-  moneyCost: z.number().optional(),
-  timeCost: z.number().optional(),
-  suggestionAdjustA: z.string().optional(),
-  suggestionAdjustB: z.string().optional()
+  moneyCost: z.number(),
+  timeCost: z.number(),
+  completions: z.boolean().array().default([])
 });
 
 export const InfoSchema = z.object({
   title: z.string(),
   icon: z.string(),
   category: z.string(),
-  type: z.string()
+  moneyUnit: z.string()
 });
 
 export const ResponseSchema = z.object({

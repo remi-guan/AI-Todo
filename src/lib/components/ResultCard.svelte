@@ -7,7 +7,15 @@
   let tasks: HTMLDivElement;
   const md = new MarkdownIt();
 
-  let { title, icon, timeCost, moneyCost, details, suggestionAdjustA, suggestionAdjustB }: Step = $props();
+  let {
+    title,
+    icon,
+    timeCost,
+    moneyCost,
+    details,
+    moneyUnit
+  }: Step & { moneyUnit: string } = $props();
+
   let html = md.render(details);
 
   onMount(() => {
@@ -33,7 +41,7 @@
   });
 </script>
 
-<div class="card bg-base-100 w-[60vw] shadow-xl snap-always snap-center h-fit">
+<div class="card bg-base-100 w-[88vw] lg:w-[60vw] shadow-xl snap-always snap-center h-fit">
   <figure>
 <!--    <img-->
 <!--      alt="Shoes"-->
@@ -45,7 +53,7 @@
     </h2>
     <p>
       <InfoBadge prefix="🕙" unit="m" variable={timeCost} />
-      <InfoBadge prefix="💰" unit="$" variable={moneyCost} />
+      <InfoBadge prefix="💰" unit={moneyUnit} variable={moneyCost} />
     </p>
     <div bind:this={tasks} class="space-y-4">
       {@html html}
