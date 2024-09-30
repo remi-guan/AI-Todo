@@ -26,13 +26,14 @@ AI Todo is an AI-powered task management tool that takes user input and breaks i
 ## Technologies Used
 
 - **[Svelte 5](https://svelte.dev/)**: The next-gen frontend framework for creating highly reactive user interfaces.
+- **[Bun](https://bun.sh/)**: A fast JavaScript runtime, toolkit, package manger and bundler.
 - **[Vite](https://vitejs.dev/)**: Fast and lightweight build tool for modern web development.
 - **[Tailwind CSS](https://tailwindcss.com/)**: Utility-first CSS framework for rapid UI development.
 - **[DaisyUI](https://daisyui.com/)**: Tailwind CSS-based component library to simplify UI building.
+- **[Svelte Animation Components](https://animation-svelte.vercel.app/)**: Used some components for better interactive.
 - **[Zod](https://zod.dev/)**: A schema validation library to handle user inputs.
 - **[Markdown-it](https://markdown-it.github.io/)**: Markdown parser to easily transform user input.
 - **[js-yaml](https://github.com/nodeca/js-yaml)**: Used to parse YAML data structures.
-- **[Axios](https://axios-http.com/)**: Promise-based HTTP client for browser and node.js.
 
 ## Installation
 
