@@ -7,18 +7,18 @@
   let tasks: HTMLDivElement;
   const md = new MarkdownIt();
 
-  let {
-    title,
-    icon,
-    timeCost,
-    moneyCost,
-    details,
-    moneyUnit
-  }: Step & { moneyUnit: string } = $props();
+  interface Props {
+    step: Step;
+    moneyUnit: string;
+  }
+
+  let { step, moneyUnit }: Props  = $props();
+  const { title, icon, timeCost, moneyCost, details } = step;
 
   let html = md.render(details);
 
   onMount(() => {
+    // Can only control syntax with querySelector due to its generated HTML
     const listItems = tasks.querySelectorAll('li');
     listItems.forEach((li, index) => {
       const count = document.createElement('span');
@@ -36,6 +36,11 @@
       li.addEventListener('click', () => {
         text.classList.toggle('line-through'); // Toggle line-through on span
         li.classList.toggle('opacity-50');
+        const completions = step.completions;
+        completions[index] = !completions[index];
+
+        // Reassign to trigger the update
+        step.completions = [...completions];
       });
     });
   });

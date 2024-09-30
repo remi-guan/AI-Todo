@@ -1,24 +1,28 @@
 <script lang="ts">
-  import ResultCard from '$lib/components/ResultCard.svelte';
   import type { Response } from '$lib/schemas';
-  import { getResponse } from '$lib/get-response';
+  import { sum } from 'lodash-es';
   import { onMount } from 'svelte';
-  import BorderBeam from '$lib/components/BorderBeam.svelte';
+  import { getResponse } from '$lib/get-response';
+  import ResultCard from '$lib/components/ResultCard.svelte';
+  import ProgressCard from '$lib/components/ProgressCard.svelte';
 
   let stepIndex = $state(0);
-  let userPrompt = $state('');
+  let totalTasks = $state(0);
 
+  let userPrompt = $state('');
   let cards: HTMLDivElement[] = $state([]);
   let response: Response | undefined = $state();
 
-  function fetchResponse() {
-    response = getResponse(userPrompt);
+  const completedTasks = $derived(sum(response?.steps.map(step => step.completions).flat()))
+
+  async function fetchResponse() {
+    const result = (await getResponse(userPrompt));
+    response = result.response;
+    totalTasks = result.totalTasks;
   }
 
   onMount(() => {
     fetchResponse();
-    // TODO: progress get from steps, parse markdown or regexp
-    console.log(response?.steps);
   });
 
   $effect(() => {
@@ -62,7 +66,7 @@
       <section class="flex gap-36 justify-between w-fit">
         {#each steps as step, i}
           <div bind:this={cards[i]} data-index={i} class="result-card">
-            <ResultCard {...step} moneyUnit={info.moneyUnit} />
+            <ResultCard step={step} moneyUnit={info.moneyUnit} />
           </div>
         {/each}
       </section>
@@ -83,18 +87,11 @@
 
   <div class="divider"></div>
 
-  <div class="alert p-5 bg-base-100 flex flex-col items-start relative text-info">
-    <BorderBeam duration={10} size={140} />
-    <p>Track Your Progress <i class="fa fa-hourglass-2 pl-1 mt-1"></i></p>
-    <div class="py-4 px-8 box-border text-gray-300 w-full">
-      <p>"All our dreams can come true, if we have the courage to pursue them."</p>
-      <p class="text-end">—— Walt Disney</p>
-    </div>
-    <progress class="progress progress-success w-full" max="100" value="0"></progress>
-  </div>
+  <ProgressCard total={totalTasks} current={completedTasks} />
 {/if}
 
 <!-- TODO: Need better style automatically fit to theme -->
+<!-- Using CSS for easily inspection. Convert to tailwind later -->
 <style lang="postcss">
   #generate {
     border: 1px solid rgba(150, 92, 201, .342);
