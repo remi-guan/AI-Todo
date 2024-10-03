@@ -21,7 +21,7 @@
     <Nav />
     {#key $page.url.pathname}
       <!-- Handles each time the router change, because it should reloads <main>, need this to work with `#key` -->
-      <main class="px-[6vw] lg:px-[20vw] mt-8 m-auto flex flex-col gap-4 bg-base-200 pb-24" in:fade={{ duration: 200 }}>
+      <main class="px-[6vw] lg:px-[20vw] mt-8 m-auto flex flex-col gap-4 bg-base-200 pb-24 overflow-y-hidden" in:fade={{ duration: 200 }}>
       {#if loading}
         <div class="flex items-center justify-center h-[80vh]">
           <span class="loading loading-spinner loading-lg"></span>

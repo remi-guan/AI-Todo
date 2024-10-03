@@ -1,10 +1,4 @@
-import yaml from 'js-yaml';
-import { ResponseSchema } from '$lib/schemas';
-import { parseMarkdownLists } from '$lib/utils';
-
-// TODO: currently mock response from ChatGPT
-// Will use OpenAI API later
-const response = `info:
+export const mockResponse = `info:
   title: "How to Make Egg Tarts?"
   icon: "🥧"
   category: "Baking"
@@ -44,19 +38,3 @@ steps:
       4. Let the tarts cool slightly before serving.
     moneyCost: 20
     timeCost: 20`;
-
-export async function getResponse(prompt: string) {
-  let totalTasks = 0;
-  const parsed = ResponseSchema.parse(yaml.load(response));
-
-  for (const step of parsed.steps) {
-    const tasksCount = parseMarkdownLists(step.details).length;
-    step.completions = new Array(tasksCount).fill(false);
-    totalTasks += tasksCount;
-  }
-
-  return {
-    totalTasks,
-    response: parsed
-  };
-}

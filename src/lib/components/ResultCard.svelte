@@ -52,7 +52,7 @@
 <!--      alt="Shoes"-->
 <!--      src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp" />-->
   </figure>
-  <div class="card-body">
+  <div class="card-body p-6">
     <h2 class="card-title">
       {title} {icon}
     </h2>

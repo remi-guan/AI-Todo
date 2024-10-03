@@ -1,29 +1,40 @@
 <script lang="ts">
   import type { Response } from '$lib/schemas';
   import { sum } from 'lodash-es';
-  import { onMount } from 'svelte';
-  import { getResponse } from '$lib/get-response';
+  import { cn } from '$lib/utils';
+  import { fly } from 'svelte/transition';
+  import { scrollIntoViewAndWait } from '$lib/utils.js';
+
   import ResultCard from '$lib/components/ResultCard.svelte';
   import ProgressCard from '$lib/components/ProgressCard.svelte';
 
   let stepIndex = $state(0);
   let totalTasks = $state(0);
-
   let userPrompt = $state('');
+
   let cards: HTMLDivElement[] = $state([]);
   let response: Response | undefined = $state();
+  let container: HTMLDivElement | undefined = $state();
 
-  const completedTasks = $derived(sum(response?.steps.map(step => step.completions).flat()))
+  let loading = $state(false);
+
+  const completedTasks = $derived(sum(response?.steps.map(step => step.completions).flat()));
 
   async function fetchResponse() {
-    const result = (await getResponse(userPrompt));
-    response = result.response;
-    totalTasks = result.totalTasks;
-  }
+    loading = true;
+    const res = await fetch('/api/response', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ prompt: userPrompt })
+    });
 
-  onMount(() => {
-    fetchResponse();
-  });
+    const data = await res.json();
+    response = data.response;
+    totalTasks = data.totalTasks;
+    loading = false;
+  }
 
   $effect(() => {
     const options = {
@@ -42,65 +53,88 @@
     // Observe each ResultCard
     cards.forEach(card => observer.observe(card));
   });
-
 </script>
 
-<p>What's your next plan?</p>
+{#if loading}
+  <!-- Display skeleton while data is being generated -->
+  <div
+    class="w-full max-w-3xl m-auto mt-4"
+    transition:fly={{ x: 1000, duration: 400, delay: 400}}
+  >
+    <p class="text-center">Generating response, please wait...</p>
+    <div class="skeleton w-full h-10 my-2"></div>
+    <div class="skeleton w-full h-10 my-2"></div>
+    <div class="skeleton w-full h-10 my-2"></div>
+    <div class="skeleton w-full h-10 my-2"></div>
+    <div class="skeleton w-full h-10 my-2"></div>
+  </div>
+{:else if !response}
+  <div transition:fly={{ x: -1000, duration: 400 }}>
+    <label for="prompt">What's your next plan?</label>
+    <input
+      bind:value={userPrompt}
+      id="prompt"
+      name="prompt"
+      type="text"
+      class="input input-bordered w-full placeholder-gray-600"
+      placeholder="How to make egg tarts?"
+      required
+    />
 
-<input bind:value={userPrompt} class="input input-bordered w-full" placeholder="Type here" type="text" />
-
-<button class="w-full max-w-2xl m-auto btn rounded-3xl flex gap-4" id="generate" onclick={fetchResponse}>
-  <i class="fa-solid fa-wand-magic-sparkles"></i>
-  Generate
-</button>
-
-{#if response}
+    <button
+      onclick={fetchResponse}
+      class={cn(
+        "w-full max-w-3xl m-auto btn rounded-3xl flex gap-4 mt-4",
+        "border border-[rgba(150,92,201,.342)] bg-[rgba(0,0,0,.22)] hover:text-white",
+        "hover:shadow-[0_0_5px_#ffffff77,-5px_0_20px_rgba(255,0,255,.7),5px_0_20px_rgba(0,255,255,.7)]"
+    )}>
+      <i class="fa-solid fa-wand-magic-sparkles"></i>
+      Generate
+    </button>
+  </div>
+{:else}
   {@const { info, steps } = response}
-  <div class="flex flex-col gap-6">
+
+  <div bind:this={container} class="flex flex-col gap-4" transition:fly={{ x: 1000, duration: 400 }}>
     <div class="flex items-center gap-2">
       <h1 class="text-3xl font-bold">{info.title}</h1>
-      <span class="badge badge-info p-3"><span class="text-xl pr-1 pb-1">{info.icon}</span>{info.category}</span>
+      <span class="badge badge-info p-3">
+        <span class="text-xl pr-1 pb-1">{info.icon}</span>{info.category}
+      </span>
     </div>
+
+    <!-- Steps display -->
+    <ul class="steps bg-base-100 py-5 rounded-2xl">
+      {#each steps as step, i}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+        <li
+          class="step cursor-pointer step-info text-info"
+          class:step-info={stepIndex === i}
+          class:text-info={stepIndex === i}
+          onclick={async () => {
+            if (container && cards[i]) {
+              await scrollIntoViewAndWait(container);
+              cards[i].scrollIntoView({ block: "nearest", behavior: "smooth" });
+            }
+          }}
+          data-content={step.icon}
+        >
+          {step.title}
+        </li>
+      {/each}
+    </ul>
 
     <div class="w-full overflow-scroll snap-x snap-mandatory scroll-auto no-scrollbar">
       <section class="flex gap-36 justify-between w-fit">
         {#each steps as step, i}
-          <div bind:this={cards[i]} data-index={i} class="result-card">
+          <div bind:this={cards[i]} data-index={i}>
             <ResultCard step={step} moneyUnit={info.moneyUnit} />
           </div>
         {/each}
       </section>
     </div>
 
-    <ul class="steps">
-      {#each steps as step, index}
-        <li
-          data-content={step.icon}
-          class="step"
-          class:step-info={stepIndex === index}
-          class:text-primary={stepIndex === index}>
-          {step.title}
-        </li>
-      {/each}
-    </ul>
+    <ProgressCard total={totalTasks} current={completedTasks} />
   </div>
-
-  <div class="divider"></div>
-
-  <ProgressCard total={totalTasks} current={completedTasks} />
 {/if}
-
-<!-- TODO: Need better style automatically fit to theme -->
-<!-- Using CSS for easily inspection. Convert to tailwind later -->
-<style lang="postcss">
-  #generate {
-    border: 1px solid rgba(150, 92, 201, .342);
-    background: rgba(0, 0, 0, .22);
-  }
-
-  #generate:hover {
-    color: #ffffff;
-    background: transparent;
-    box-shadow: 0 0 5px #ffffff77, -5px 0 20px rgba(255, 0, 255, .7), 5px 0 20px rgba(0, 255, 255, .7);
-  }
-</style>
