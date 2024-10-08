@@ -47,11 +47,6 @@
 </script>
 
 <div class="card bg-base-100 w-[88vw] lg:w-[60vw] shadow-xl snap-always snap-center h-fit">
-  <figure>
-<!--    <img-->
-<!--      alt="Shoes"-->
-<!--      src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp" />-->
-  </figure>
   <div class="card-body p-6">
     <h2 class="card-title">
       {title} {icon}

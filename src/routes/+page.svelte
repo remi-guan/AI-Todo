@@ -1,19 +1,21 @@
 <script lang="ts">
-  import type { Response } from '$lib/schemas';
   import { sum } from 'lodash-es';
-  import { cn } from '$lib/utils';
   import { fly } from 'svelte/transition';
+  import { _ } from 'svelte-i18n';
+  import { cn } from '$lib/utils';
+  import axios from 'axios';
+  import type { ParsedResponse } from '$lib/schemas';
   import { scrollIntoViewAndWait } from '$lib/utils.js';
-
   import ResultCard from '$lib/components/ResultCard.svelte';
   import ProgressCard from '$lib/components/ProgressCard.svelte';
+  import GeneratingPlaceholder from '$lib/components/GeneratingPlaceholder.svelte';
 
   let stepIndex = $state(0);
   let totalTasks = $state(0);
   let userPrompt = $state('');
 
   let cards: HTMLDivElement[] = $state([]);
-  let response: Response | undefined = $state();
+  let response: ParsedResponse | undefined = $state();
   let container: HTMLDivElement | undefined = $state();
 
   let loading = $state(false);
@@ -22,15 +24,7 @@
 
   async function fetchResponse() {
     loading = true;
-    const res = await fetch('/api/response', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ prompt: userPrompt })
-    });
-
-    const data = await res.json();
+    const { data } = await axios.post('/api/response', { prompt: userPrompt })
     response = data.response;
     totalTasks = data.totalTasks;
     loading = false;
@@ -57,39 +51,29 @@
 
 {#if loading}
   <!-- Display skeleton while data is being generated -->
-  <div
-    class="w-full max-w-3xl m-auto mt-4"
-    transition:fly={{ x: 1000, duration: 400, delay: 400}}
-  >
-    <p class="text-center">Generating response, please wait...</p>
-    <div class="skeleton w-full h-10 my-2"></div>
-    <div class="skeleton w-full h-10 my-2"></div>
-    <div class="skeleton w-full h-10 my-2"></div>
-    <div class="skeleton w-full h-10 my-2"></div>
-    <div class="skeleton w-full h-10 my-2"></div>
-  </div>
+  <GeneratingPlaceholder />
 {:else if !response}
-  <div transition:fly={{ x: -1000, duration: 400 }}>
-    <label for="prompt">What's your next plan?</label>
+  <div class="flex flex-col gap-4" transition:fly={{ x: -1000, duration: 400 }}>
+    <label for="prompt" class="text-lg">{$_("What's your next todo?")}</label>
     <input
       bind:value={userPrompt}
       id="prompt"
       name="prompt"
       type="text"
       class="input input-bordered w-full placeholder-gray-600"
-      placeholder="How to make egg tarts?"
+      placeholder={$_('How to make egg tarts?')}
       required
     />
 
     <button
       onclick={fetchResponse}
       class={cn(
-        "w-full max-w-3xl m-auto btn rounded-3xl flex gap-4 mt-4",
+        "w-full m-auto btn rounded-3xl flex gap-4 mt-4",
         "border border-[rgba(150,92,201,.342)] bg-[rgba(0,0,0,.22)] hover:text-white",
         "hover:shadow-[0_0_5px_#ffffff77,-5px_0_20px_rgba(255,0,255,.7),5px_0_20px_rgba(0,255,255,.7)]"
     )}>
       <i class="fa-solid fa-wand-magic-sparkles"></i>
-      Generate
+      {$_('Generate')}
     </button>
   </div>
 {:else}

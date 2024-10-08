@@ -1,19 +1,21 @@
-import { json, error } from '@sveltejs/kit';
 import yaml from 'js-yaml';
 import OpenAI from 'openai';
-import { AI_ENABLED } from '$env/static/private';
-import { ResponseSchema } from '$lib/schemas';
-import { parseMarkdownLists } from '$lib/utils';
-import { mockResponse } from '$lib/mock-response';
+import { mockResponse } from '$lib/mocks';
+import { json, error } from '@sveltejs/kit';
+import { saveResponse } from '$lib/database/response';
+import type { ParsedResponse } from '$lib/schemas';
+import { ParsedResponseSchema } from '$lib/schemas';
+import { AI_ENABLED, OPENAI_API_KEY } from '$env/static/private';
+import { parseMarkdownLists, getTotalTasks } from '$lib/utils';
 
 const systemPrompt = `
 You are ChatGPT, a large language model trained by OpenAI.
 Knowledge cutoff: 2024-07
-Current date: 2024-09
+Current date: 2024-10
 
 Your reply should be valid YAML, and strings must be quoted.
 The properties MUST be the same as the types. Your reply should be the same as the user's language and give the moneyUnit symbol match their local.
-No more than 3-4 steps, always use numeric list for sub-steps. Always include money cost and time cost.
+No more than 3-4 steps, each step must contain at least one sub-step. Always use numeric list for sub-steps, with text description if needed (see example). Always include money cost and time cost.
 
 For example:
 info:
@@ -43,10 +45,10 @@ steps:
  * If AI_ENABLED is false or the prompt is the default one, return the mock response.
  */
 async function getResponse(prompt: string) {
-  console.log({ ena: AI_ENABLED });
   if (AI_ENABLED === 'true' && prompt !== 'How to make egg tarts?') {
-    const openai = new OpenAI();
-    console.log({ openai });
+    const openai = new OpenAI({
+      apiKey: OPENAI_API_KEY
+    });
 
     const response = await openai.chat.completions.create({
       messages: [
@@ -57,7 +59,6 @@ async function getResponse(prompt: string) {
     });
 
     console.log({ response });
-
     return response.choices[0]?.message?.content || '';
   }
   return mockResponse;
@@ -66,30 +67,20 @@ async function getResponse(prompt: string) {
 /**
  * Parse the OpenAI response into the expected schema.
  */
-async function parseResponse(response: string) {
-  let totalTasks = 0;
-
+async function parseResponse(aiResponse: string): Promise<ParsedResponse> {
   try {
-    const parsed = ResponseSchema.parse(yaml.load(response));
-
-    for (const step of parsed.steps) {
+    const response = ParsedResponseSchema.parse(yaml.load(aiResponse));
+    for (const step of response.steps) {
       const tasksCount = parseMarkdownLists(step.details).length;
       step.completions = new Array(tasksCount).fill(false);
-      totalTasks += tasksCount;
     }
 
-    return {
-      totalTasks,
-      response: parsed
-    };
+    return response;
   } catch (e) {
     throw error(500, 'Failed to parse the response');
   }
 }
 
-/**
- * POST request handler
- */
 export const POST = async ({ request }) => {
   const { prompt } = await request.json();
 
@@ -99,10 +90,11 @@ export const POST = async ({ request }) => {
 
   // Fetch and parse the response from OpenAI
   const aiResponse = await getResponse(prompt);
-  const parsedResponse = await parseResponse(aiResponse);
+  const parsed = await parseResponse(aiResponse);
+  const response = await saveResponse(parsed);
 
   return json({
-    totalTasks: parsedResponse.totalTasks,
-    response: parsedResponse.response
+    response,
+    totalTasks: getTotalTasks(response)
   });
 };

@@ -16,11 +16,9 @@ export const InfoSchema = z.object({
   moneyUnit: z.string()
 });
 
-export const ResponseSchema = z.object({
+export const ParsedResponseSchema = z.object({
   info: InfoSchema,
   steps: z.array(StepSchema)
 });
 
-export type Step = z.infer<typeof StepSchema>;
-export type Info = z.infer<typeof InfoSchema>;
-export type Response = z.infer<typeof ResponseSchema>;
+export type ParsedResponse = z.infer<typeof ParsedResponseSchema>;
