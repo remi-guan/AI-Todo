@@ -1,13 +1,9 @@
 import { json } from '@sveltejs/kit';
 import { updateStepCompletions } from '$lib/database/response';
 
-export const POST = async ({ request, params }) => {
-  const stepId = Number(params.stepId); // Get stepId from URL
-  const { completions } = await request.json(); // Get completions from request body
-
-  if (!Array.isArray(completions) || completions.some((c) => typeof c !== 'boolean')) {
-    return json({ error: 'Invalid completions array' }, { status: 400 });
-  }
+export const PUT = async ({ request, params }) => {
+  const stepId = Number(params.stepId);
+  const completions = await request.json();
 
   try {
     // Update completions for the given step

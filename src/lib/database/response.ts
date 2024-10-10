@@ -1,140 +1,133 @@
-import type { Response } from '@prisma/client';
-import { PrismaClient } from '@prisma/client';
-import type { ParsedResponse } from '$lib/schemas';
+import { db } from './db';
+import { eq, inArray, sql } from 'drizzle-orm';
+import type { Info, Response, Step, Completion } from './schema';
+import { info, response, step, completion } from './schema';
+import { getMarkdownListCount } from '$lib/utils';
+import type { ZodResponse } from '$lib/schemas';
 
-const prisma = new PrismaClient();
+export type StepWithRelations = Step & { completions: Completion[] };
 
-export async function getResponseById(infoId: number): Promise<Response> {
-  return prisma.response.findUnique({
-    where: {
-      infoId: infoId
-    },
-    include: {
-      info: true, // Include the associated Info
-      steps: {
-        include: {
-          completions: true // Include the completions for each step
-        }
-      }
-    }
-  });
+export interface ResponseWithRelations extends Response {
+  info: Info;
+  steps: StepWithRelations[];
 }
 
-/**
- * Get all infos from the database.
- * @returns {Promise<Info[]>} List of all Info objects.
- */
-export async function getAllInfos() {
-  return prisma.info.findMany();
-}
+export async function getResponseById(infoId: number): Promise<ResponseWithRelations | undefined> {
+  // Fetch the response and associated info
+  const [responseData] = await db
+    .select()
+    .from(response)
+    .innerJoin(info, eq(response.infoId, info.id))
+    .where(eq(response.infoId, infoId));
 
-/**
- * Saves a response to the database by creating an Info, Response, Steps, and Completions.
- * @param {ParsedResponse} response - The response object to be saved. It includes info, steps, and completions.
- */
-export async function saveResponse(response: ParsedResponse): Promise<Response> {
-  // Create Info
-  const createdInfo = await prisma.info.create({
-    data: {
-      title: response.info.title,
-      icon: response.info.icon,
-      category: response.info.category,
-      moneyUnit: response.info.moneyUnit
-    }
-  });
+  if (!responseData) {
+    return undefined;
+  }
 
-  // Create Response
-  const createdResponse = await prisma.response.create({
-    data: {
-      infoId: createdInfo.id
-    },
-    include: {
-      info: true,
-      steps: {
-        include: {
-          completions: true
-        }
+  const responseId = responseData.response.id;
+
+  // Fetch steps for the response
+  const steps = (await db.select().from(step).where(eq(step.responseId, responseId))) as Step[];
+
+  // Fetch completions for all steps
+  const stepIds = steps.map((s) => s.id);
+
+  const completions = (await db.select().from(completion).where(inArray(completion.stepId, stepIds))) as Completion[];
+
+  // Group completions by stepId
+  const completionsByStepId = completions.reduce(
+    (acc, curr) => {
+      if (!acc[curr.stepId]) {
+        acc[curr.stepId] = [];
       }
-    }
-  });
-
-  // Create Steps and Completions
-  const stepsWithCompletions = await Promise.all(
-    response.steps.map(async (step) => {
-      const createdStep = await prisma.step.create({
-        data: {
-          title: step.title,
-          icon: step.icon,
-          details: step.details,
-          moneyCost: step.moneyCost,
-          timeCost: step.timeCost,
-          responseId: createdResponse.id
-        },
-        include: {
-          completions: true
-        }
-      });
-
-      const completions = await Promise.all(
-        step.completions.map(async (completion) => {
-          return prisma.completion.create({
-            data: {
-              value: completion,
-              stepId: createdStep.id
-            }
-          });
-        })
-      );
-
-      return {
-        ...createdStep,
-        completions
-      };
-    })
+      acc[curr.stepId].push(curr);
+      return acc;
+    },
+    {} as Record<number, Completion[]>
   );
 
+  // Combine steps with their completions
+  const stepsWithCompletions = steps.map((s) => ({
+    ...s,
+    completions: completionsByStepId[s.id] || []
+  }));
+
   return {
-    ...createdResponse,
-    info: createdInfo,
+    ...responseData.response,
+    info: responseData.info,
     steps: stepsWithCompletions
   };
 }
 
-/**
- * Updates the completion status of a step's subtasks.
- * @param {number} stepId - The ID of the step to update completions for.
- * @param {boolean[]} completions - An array of booleans representing the completion status of the subtasks.
- * @returns {Promise<void>} - A promise that resolves when the completions have been updated.
- */
-export async function updateStepCompletions(stepId: number, completions: boolean[]): Promise<void> {
-  try {
-    // First, find all existing completion records for the step
-    const existingCompletions = await prisma.completion.findMany({
-      where: { stepId }
-    });
+export async function getAllInfos(): Promise<Info[]> {
+  return db.select().from(info);
+}
 
-    // Update each completion record, matching by index
-    await Promise.all(
-      completions.map((completionValue, index) => {
-        if (existingCompletions[index]) {
-          // If the completion exists, update its value
-          return prisma.completion.update({
-            where: { id: existingCompletions[index].id },
-            data: { value: completionValue }
-          });
-        } else {
-          // If the completion doesn't exist, create a new one
-          return prisma.completion.create({
-            data: {
-              value: completionValue,
-              stepId: stepId
-            }
-          });
-        }
-      })
-    );
-  } catch (error) {
-    console.error('Error updating completions:', error);
-    throw new Error('Failed to update completions.');
-  }
+export async function saveResponse(responseData: ZodResponse): Promise<ResponseWithRelations> {
+  // Start a transaction
+  return await db.transaction(async (tx) => {
+    // Insert into 'info' table
+    const [createdInfo] = await tx.insert(info).values(responseData.info).returning();
+
+    // Insert into 'response' table
+    const [createdResponse] = await tx.insert(response).values({ infoId: createdInfo.id }).returning();
+
+    const stepsWithCompletions: (Step & { completions: Completion[] })[] = [];
+
+    for (const stepData of responseData.steps) {
+      const tasksCount = getMarkdownListCount(stepData.details);
+
+      // Insert into 'step' table
+      const [createdStep] = await tx
+        .insert(step)
+        .values({
+          ...stepData,
+          responseId: createdResponse.id
+        })
+        .returning();
+
+      // Create Completions
+      const completionsData = Array.from({ length: tasksCount }, () => ({
+        value: false,
+        stepId: createdStep.id
+      }));
+
+      const completions = await tx.insert(completion).values(completionsData).returning();
+
+      stepsWithCompletions.push({
+        ...createdStep,
+        completions
+      });
+    }
+
+    return {
+      ...createdResponse,
+      info: createdInfo,
+      steps: stepsWithCompletions
+    };
+  });
+}
+
+export async function updateStepCompletions(stepId: number, completions: Completion[]): Promise<void> {
+  await db.transaction(async (tx) => {
+    for (const completionData of completions) {
+      await tx.update(completion).set({ value: completionData.value }).where(eq(completion.id, completionData.id));
+    }
+  });
+}
+
+export async function deleteResponseById(infoId: number): Promise<void> {
+  await db.transaction(async (tx) => {
+    // Delete the response directly
+    await tx
+      .delete(response)
+      .where(eq(response.infoId, sql`${infoId}`)) // Use `sql` wrapper for proper type handling
+      .run();
+
+    // Delete the info record, it's only associated with this response
+    await tx
+      .delete(info)
+      .where(eq(info.id, sql`${infoId}`))
+      .run();
+  });
 }

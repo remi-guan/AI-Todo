@@ -20,5 +20,11 @@ export default {
     }
   },
 
-  plugins: [typography, daisyui]
+  plugins: [typography, daisyui],
+
+  daisyui: {
+    themes: ['light', 'dark', 'cupcake', 'emerald']
+  },
+
+  darkMode: ['class', '[data-theme="dark"]']
 } as Config;

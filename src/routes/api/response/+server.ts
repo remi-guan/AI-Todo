@@ -2,11 +2,10 @@ import yaml from 'js-yaml';
 import OpenAI from 'openai';
 import { mockResponse } from '$lib/mocks';
 import { json, error } from '@sveltejs/kit';
+import type { ZodResponse } from '$lib/schemas';
+import { ResponseSchema } from '$lib/schemas';
 import { saveResponse } from '$lib/database/response';
-import type { ParsedResponse } from '$lib/schemas';
-import { ParsedResponseSchema } from '$lib/schemas';
 import { AI_ENABLED, OPENAI_API_KEY } from '$env/static/private';
-import { parseMarkdownLists, getTotalTasks } from '$lib/utils';
 
 const systemPrompt = `
 You are ChatGPT, a large language model trained by OpenAI.
@@ -58,43 +57,43 @@ async function getResponse(prompt: string) {
       model: 'gpt-4o-mini-2024-07-18'
     });
 
-    console.log({ response });
     return response.choices[0]?.message?.content || '';
   }
+  // TODO: remove this
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   return mockResponse;
 }
 
 /**
  * Parse the OpenAI response into the expected schema.
  */
-async function parseResponse(aiResponse: string): Promise<ParsedResponse> {
+async function parseResponse(aiResponse: string): Promise<ZodResponse> {
   try {
-    const response = ParsedResponseSchema.parse(yaml.load(aiResponse));
-    for (const step of response.steps) {
-      const tasksCount = parseMarkdownLists(step.details).length;
-      step.completions = new Array(tasksCount).fill(false);
-    }
-
-    return response;
-  } catch (e) {
-    throw error(500, 'Failed to parse the response');
+    return ResponseSchema.parse(yaml.load(aiResponse));
+  } catch {
+    throw new Error('Failed to parse the response');
   }
 }
 
 export const POST = async ({ request }) => {
   const { prompt } = await request.json();
 
+  if (!OPENAI_API_KEY) {
+    throw error(500, 'Must specify a valid OPENAI_API_KEY in .env file!');
+  }
+
   if (!prompt) {
     throw error(400, 'Prompt is required');
   }
 
   // Fetch and parse the response from OpenAI
-  const aiResponse = await getResponse(prompt);
-  const parsed = await parseResponse(aiResponse);
-  const response = await saveResponse(parsed);
+  try {
+    const aiResponse = await getResponse(prompt);
+    const parsed = await parseResponse(aiResponse);
+    const response = await saveResponse(parsed);
 
-  return json({
-    response,
-    totalTasks: getTotalTasks(response)
-  });
+    return json(response);
+  } catch (err) {
+    throw error(500, (err as Error).message);
+  }
 };

@@ -4,6 +4,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
+    "migrate": "bun run ./src/lib/database/migrate.ts",
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
@@ -20,9 +21,11 @@
     "@sveltejs/vite-plugin-svelte": "^4.0.0-next.6",
     "@tailwindcss/typography": "^0.5.15",
     "@types/axios": "^0.14.0",
+    "@types/bun": "^1.1.10",
     "@types/eslint": "^9.6.1",
     "@types/js-yaml": "^4.0.9",
     "@types/markdown-it": "^14.1.2",
+    "drizzle-kit": "^0.25.0",
     "eslint": "^9.11.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-svelte": "^2.44.1",
@@ -31,7 +34,6 @@
     "prettier": "^3.3.3",
     "prettier-plugin-svelte": "^3.2.7",
     "prettier-plugin-tailwindcss": "^0.6.8",
-    "prisma": "5.20.0",
     "svelte": "5.0.0-next.260",
     "svelte-check": "^4.0.4",
     "tailwindcss": "^3.4.13",
@@ -40,23 +42,32 @@
     "vite": "^5.4.8"
   },
   "dependencies": {
+    "@eslint/js": "^9.12.0",
     "@fortawesome/fontawesome-free": "^6.6.0",
-    "@prisma/client": "5.20.0",
     "@types/lodash-es": "^4.17.12",
+    "@typescript-eslint/parser": "^8.8.1",
     "autoprefixer": "^10.4.20",
     "axios": "^1.7.7",
     "clsx": "^2.1.1",
     "daisyui": "^4.12.10",
+    "drizzle-orm": "^0.34.1",
+    "invert-color": "^2.0.0",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
     "markdown-it": "^14.1.0",
     "openai": "^4.67.0",
+    "svelte-adapter-bun": "^0.5.2",
+    "svelte-eslint-parser": "^0.41.1",
+    "svelte-french-toast": "git+https://github.com/anatoliy-t7/svelte-5-french-toast.git",
     "svelte-i18n": "^4.0.0",
     "tailwind-merge": "^2.5.2",
+    "theme-change": "^2.5.0",
     "zod": "^3.23.8"
   },
   "trustedDependencies": [
-    "es5-ext"
+    "@sveltejs/kit",
+    "es5-ext",
+    "esbuild"
   ]
 }

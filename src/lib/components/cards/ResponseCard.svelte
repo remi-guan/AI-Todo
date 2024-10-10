@@ -1,18 +1,20 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { on } from 'svelte/events';
   import MarkdownIt from 'markdown-it';
-  import type { Step } from '$lib/schemas';
-  import InfoBadge from '$lib/components/InfoBadge.svelte';
+  import InfoBadge from '$lib/components/utils/InfoBadge.svelte';
+  import axios from 'axios';
+  import type { StepWithRelations } from '$lib/database/response';
 
   let tasks: HTMLDivElement;
   const md = new MarkdownIt();
 
   interface Props {
-    step: Step;
+    step: StepWithRelations;
     moneyUnit: string;
   }
 
-  let { step, moneyUnit }: Props  = $props();
+  let { step, moneyUnit }: Props = $props();
   const { title, icon, timeCost, moneyCost, details } = step;
 
   let html = md.render(details);
@@ -22,31 +24,42 @@
     const listItems = tasks.querySelectorAll('li');
     listItems.forEach((li, index) => {
       const count = document.createElement('span');
-      count.className = "text-primary pr-1.5";
+      count.className = 'text-info pr-1.5';
       count.innerText = `${index + 1}. `;
 
       const text = document.createElement('span');
       text.innerText = li.innerText;
 
-      li.className = "my-3 p-2 bg-base-200 rounded-lg transition-all";
+      function markAsCompleted() {
+        text.classList.toggle('line-through'); // Toggle line-through on span
+        li.classList.toggle('opacity-50');
+      }
+
+      li.className = 'my-3 p-2 bg-base-200 rounded-lg transition-all cursor-pointer';
       li.innerHTML = '';
       li.appendChild(count);
       li.appendChild(text);
 
-      li.addEventListener('click', () => {
-        text.classList.toggle('line-through'); // Toggle line-through on span
-        li.classList.toggle('opacity-50');
+      if (step.completions[index].value) {
+        markAsCompleted();
+      }
+
+      on(li, 'click', () => {
+        markAsCompleted();
         const completions = step.completions;
-        completions[index] = !completions[index];
+        completions[index].value = Number(!completions[index].value);
 
         // Reassign to trigger the update
         step.completions = [...completions];
+
+        // Update new completions status to the database
+        axios.put(`/api/response/step/${step.id}/completions`, completions);
       });
     });
   });
 </script>
 
-<div class="card bg-base-100 w-[88vw] lg:w-[60vw] shadow-xl snap-always snap-center h-fit">
+<div class="card bg-base-100 w-[88vw] lg:w-[60vw] snap-always snap-center h-fit">
   <div class="card-body p-6">
     <h2 class="card-title">
       {title} {icon}
