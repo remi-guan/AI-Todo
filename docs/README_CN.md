@@ -4,11 +4,10 @@
 
 <p align="center">
     <img src="https://img.shields.io/badge/Svelte-5-orange?style=for-the-badge&logo=svelte&logoColor=white" alt="Svelte 5">
-    <img src="https://img.shields.io/badge/Vite-5.0-blueviolet?style=for-the-badge&logo=vite&logoColor=white" alt="Vite">
+    <img src="https://img.shields.io/badge/Vite-5.4.8-purple?style=for-the-badge&logo=vite&logoColor=white" alt="Vite">
     <img src="https://img.shields.io/badge/TailwindCSS-3.4-blue?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS">
-    <img src="https://img.shields.io/badge/DaisyUI-4.12-yellow?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="DaisyUI">
-    <img src="https://img.shields.io/badge/Drizzle--ORM-0.34-blue?style=for-the-badge&logoColor=white" alt="Drizzle ORM">
-    <img src="https://img.shields.io/badge/FontAwesome-5-blue?style=for-the-badge&logo=fontawesome&logoColor=white" alt="FontAwesome 5">
+    <img src="https://img.shields.io/badge/DaisyUI-4.12-green?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="DaisyUI">
+    <img src="https://img.shields.io/badge/Drizzle--ORM-0.34-yellow?style=for-the-badge&logoColor=white" alt="Drizzle ORM">
 </p>
 
 <p align="center">
