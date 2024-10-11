@@ -59,8 +59,8 @@ async function getResponse(prompt: string) {
 
     return response.choices[0]?.message?.content || '';
   }
-  // TODO: remove this
-  await new Promise((resolve, reject) => setTimeout(reject, 1000));
+  // Mock of waiting
+  await new Promise((resolve) => setTimeout(resolve, 2000));
   return mockResponse;
 }
 
