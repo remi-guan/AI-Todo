@@ -59,17 +59,21 @@
   });
 </script>
 
-<div class="card bg-base-100 w-[88vw] lg:w-[60vw] snap-always snap-center h-fit">
+<article class="card bg-base-100 w-[88vw] lg:w-[60vw] snap-always snap-center h-fit">
   <div class="card-body p-6">
-    <h2 class="card-title">
-      {title} {icon}
-    </h2>
-    <p>
-      <InfoBadge prefix="🕙" unit="m" variable={timeCost} />
-      <InfoBadge prefix="💰" unit={moneyUnit} variable={moneyCost} />
-    </p>
-    <div bind:this={tasks} class="space-y-4">
-      {@html html}
-    </div>
+    <header>
+      <h2 class="card-title text-3xl font-bold">
+        {title} {icon}
+      </h2>
+    </header>
+    <section aria-label="Task Details" class="space-y-4 mt-1">
+      <p>
+        <InfoBadge prefix="🕙" unit="m" variable={timeCost} />
+        <InfoBadge prefix="💰" unit={moneyUnit} variable={moneyCost} />
+      </p>
+      <div bind:this={tasks} class="space-y-4">
+        {@html html}
+      </div>
+    </section>
   </div>
-</div>
+</article>

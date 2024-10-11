@@ -6,5 +6,21 @@
   "Your previous sessions display here": "这里会展示您现有的任务",
   "Your Progress": "进度",
   "Create A New Todo": "新建一个任务",
-  "Previous Todos": "现有任务"
+  "Previous Todos": "现有任务",
+  "Change language": "修改语言",
+  "Change theme": "修改主题",
+  "Generating response, please wait...": "生成回复中，请稍候……",
+  "Oops! The request isn't working...": "请求未成功…",
+  "Please try to fix it by checking the error message above. Afterward you can retry.": "请您参考上述错误信息修复问题。之后您可重试。",
+  "Retry": "重试",
+  "Confirm": "确认",
+  "Close": "关闭",
+  "You're going to delete": "您将要删除",
+  "This action can't be recovered. Are you sure?": "该操作无法恢复，您确定吗？",
+  "Deleting Todo": "删除待办任务",
+  "Deleting...": "删除中…",
+  "Delete success": "删除成功",
+  "Delete failed": "删除失败",
+  "Congrats! You have finished your todo!": "恭喜！您完成了一个任务！",
+  ".": "。"
 }

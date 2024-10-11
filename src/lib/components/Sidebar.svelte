@@ -35,9 +35,9 @@
     await toast.promise(
       axios.delete(`/api/response/${deletingTodo!.id}`),
       {
-        loading: 'Deleting...',
-        success: 'Delete success',
-        error: 'Delete failed'
+        loading: $_('Deleting...'),
+        success: $_('Delete success'),
+        error: $_('Delete failed')
       }
     );
     infosStore.update();
@@ -46,59 +46,62 @@
   onMount(infosStore.update);
 </script>
 
-<ul class="menu max-h-full bg-base-200 w-80 p-3 pt-20 flex-nowrap">
-  {#if infosStore.isEmpty}
-    <div class="text-xl">{$_('Previous Todos')}</div>
-    <li class="text-center opacity-50">{$_('Your previous sessions display here')}</li>
-  {:else}
-    <h1 class="text-xl">{$_('Previous Todos')}</h1>
-    <div class="overflow-y-auto mb-12 mt-4 space-y-6">
-    {#each Object.entries(infosStore.infos) as [category, infos]}
-      <div>
-        <Badge class="mb-4" category={category} icon={infos[0].icon} />
-        <ul>
-        {#each infos as info}
-          <li>
-            <div
-              role="button"
-              tabindex="0"
-              onkeydown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  getResponseByInfoId(info.id);
-                }
-              }}
-              onclick={() => getResponseByInfoId(info.id)}
-              class="btn w-full bg-base-300 my-1 p-1 relative group"
-            >
-              <span class="absolute left-6 top-[30%]">{info.icon}</span>
-              <span>{info.title}</span>
-              <button
-                class="lg:opacity-0 group-hover:opacity-100 btn-sm transition-all duration-300 btn btn-ghost absolute right-4 top-[15%]"
-                title="Delete todo"
-                aria-label="Delete todo"
-                data-tooltip="Delete todo"
-                onclick={stopPropagation(() => handleDeleteButtonClick(info))}
+<aside class="h-full bg-base-200">
+  <ul aria-label="Previous Todos" class="menu max-h-full bg-base-200 w-80 p-3 pt-20 flex-nowrap">
+    {#if infosStore.isEmpty}
+      <div class="text-xl" aria-label="Section Heading">{$_('Previous Todos')}</div>
+      <li class="text-center opacity-50 mt-2" aria-label="Empty List Message">{$_('Your previous sessions display here')}</li>
+    {:else}
+      <h1 class="text-xl" aria-label="Section Heading">{$_('Previous Todos')}</h1>
+      <div class="overflow-y-auto mb-12 mt-4 space-y-6">
+      {#each Object.entries(infosStore.infos) as [category, infos]}
+        <div>
+          <Badge class="mb-4" category={category} icon={infos[0].icon} />
+          <ul>
+          {#each infos as info}
+            <li>
+              <div
+                role="button"
+                tabindex="0"
+                onkeydown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    getResponseByInfoId(info.id);
+                  }
+                }}
+                onclick={() => getResponseByInfoId(info.id)}
+                class="btn w-full bg-base-300 my-1 p-1 relative group"
+                aria-label={`View details for ${info.title}`}
               >
-                <i class="fa-solid fa-x text-sm"></i>
-              </button>
-            </div>
-          </li>
-        {/each}
-        </ul>
+                <span class="absolute left-6 top-[30%]" aria-hidden="true">{info.icon}</span>
+                <span>{info.title}</span>
+                <button
+                  class="lg:opacity-0 group-hover:opacity-100 btn-sm transition-all duration-300 btn btn-ghost absolute right-4 top-[15%]"
+                  title="Delete todo"
+                  aria-label="Delete todo"
+                  data-tooltip="Delete todo"
+                  onclick={stopPropagation(() => handleDeleteButtonClick(info))}
+                >
+                  <i class="fa-solid fa-x text-sm"></i>
+                </button>
+              </div>
+            </li>
+          {/each}
+          </ul>
+        </div>
+      {/each}
       </div>
-    {/each}
+    {/if}
+    <div aria-label="Settings" class="fixed left-2 bottom-2 flex">
+      <LanguageSwitchDropdown />
+      <ThemeSwitchDropdown />
     </div>
-  {/if}
-  <div class="fixed left-2 bottom-2 flex">
-    <LanguageSwitchDropdown />
-    <ThemeSwitchDropdown />
-  </div>
-</ul>
+  </ul>
+</aside>
 
 <ConfirmModal
   confirm={deleteTodo}
   danger
   modalId="confirm_delete_todo"
-  text="You're going to delete {deletingTodo?.icon} {deletingTodo?.title}. This action can't be recovered. Are you sure?"
-  title="Deleting Todo"
+  text="{$_('You\'re going to delete')} {deletingTodo?.icon} {deletingTodo?.title}{$_('.')} {$_('This action can\'t be recovered. Are you sure?')}"
+  title={$_('Deleting Todo')}
 />

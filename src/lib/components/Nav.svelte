@@ -2,14 +2,14 @@
   import { _ } from 'svelte-i18n';
 </script>
 
-<nav class="navbar z-20 bg-base-100 top-0 sticky">
+<nav aria-label="Main Navigation" class="navbar z-20 bg-base-100 top-0 sticky">
   <div class="navbar-start">
-    <label class="btn btn-ghost" for="my-drawer">
-      <i class="fas fa-bars"></i>
+    <label aria-label="Open Menu" class="btn btn-ghost" for="my-drawer">
+      <i aria-hidden="true" class="fas fa-bars"></i>
     </label>
   </div>
   <div class="navbar-center">
-    <a class="btn btn-ghost text-xl font-bold" href="/">AI Todo</a>
+    <a aria-label="Navigate to Home" class="btn btn-ghost text-xl font-bold" href="/">AI Todo</a>
   </div>
   <div class="navbar-end gap-2">
     <button
@@ -18,7 +18,7 @@
       data-tip={$_('Create A New Todo')}
       onclick={() => window.location.reload()}
     >
-      <i class="fa-solid fa-pen-to-square"></i>
+      <i aria-hidden="true" class="fa-solid fa-pen-to-square"></i>
     </button>
   </div>
 </nav>

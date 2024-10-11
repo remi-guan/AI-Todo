@@ -17,8 +17,8 @@
   let errorMessage = $state('');
   let loading = $state(false);
 
-  let cards: HTMLDivElement[] = $state([]);
-  let container: HTMLDivElement | undefined = $state();
+  let cards: HTMLElement[] = $state([]);
+  let container: HTMLElement | undefined = $state();
 
   const totalTasks = $derived(responseStore.response ? getTotalTasks(responseStore.response) : 0);
   const completedTasks = $derived(sum(responseStore.response
@@ -58,82 +58,85 @@
   });
 </script>
 
-<div class="grid">
+<section class="grid">
 {#if !responseStore.response && !loading && !errorMessage}
-  <form
-    transition:fade
-    class="flex flex-col gap-4 col-span-full row-span-full w-full"
-    onsubmit={preventDefault(fetchResponse)}
-  >
-    <label for="prompt" class="text-lg">{$_("What's your next todo?")}</label>
-    <input
-      bind:value={userPrompt}
-      id="prompt"
-      name="prompt"
-      type="text"
-      class="input input-bordered w-full placeholder-gray-600"
-      placeholder={$_('How to make egg tarts?')}
-    />
-    <button
-      type="submit"
-      class={cn(
-        "w-full btn rounded-3xl flex gap-4 mt-2",
-        "dark:border-[rgba(150,92,201,.342)] dark:bg-[rgba(0,0,0,.22)] dark:text-white dark:hover:shadow-[0_0_5px_#ffffff77,-5px_0_20px_rgba(255,0,255,.7),5px_0_20px_rgba(0,255,255,.7)]",
-        "border border-[rgba(92,150,201,.342)] bg-[rgba(255,255,255,.85)] hover:bg-[rgba(255,255,255,.45)] text-[rgba(0,0,0,.8)] hover:text-black hover:shadow-[0_0_2px_#00000033,-2px_0_20px_rgba(0,128,255,.7),2px_0_8px_rgba(128,0,255,.7)]",
-      )}>
-      <i class="fa-solid fa-wand-magic-sparkles"></i>
-      {$_('Generate')}
-    </button>
-  </form>
+  <section class="col-span-full row-span-full" aria-labelledby="task-prompt">
+    <form class="flex flex-col gap-4 col-span-full row-span-full w-full" transition:fade onsubmit={preventDefault(fetchResponse)}>
+      <label for="prompt" id="task-prompt" class="text-lg">{$_("What's your next todo?")}</label>
+      <input
+        bind:value={userPrompt}
+        id="prompt"
+        name="prompt"
+        type="text"
+        class="input input-bordered w-full placeholder-gray-600"
+        placeholder={$_('How to make egg tarts?')}
+      />
+      <button
+        type="submit"
+        class={cn(
+          "w-full btn rounded-3xl flex gap-4 mt-2",
+          "dark:border-[rgba(150,92,201,.342)] dark:bg-[rgba(0,0,0,.22)] dark:text-white dark:hover:shadow-[0_0_5px_#ffffff77,-5px_0_20px_rgba(255,0,255,.7),5px_0_20px_rgba(0,255,255,.7)]",
+          "border border-[rgba(92,150,201,.342)] bg-[rgba(255,255,255,.85)] hover:bg-[rgba(255,255,255,.45)] text-[rgba(0,0,0,.8)] hover:text-black hover:shadow-[0_0_2px_#00000033,-2px_0_20px_rgba(0,128,255,.7),2px_0_8px_rgba(128,0,255,.7)]",
+        )}>
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        {$_('Generate')}
+      </button>
+    </form>
+  </section>
 {:else if loading}
-  <LoadingSkeleton />
+  <section class="col-span-full row-span-full" aria-live="polite">
+    <LoadingSkeleton />
+  </section>
 {:else if errorMessage}
-  <ErrorPage errorMessage={errorMessage} retry={() => errorMessage = ''} />
+  <section class="col-span-full row-span-full" aria-live="polite" aria-describedby="error-message">
+    <ErrorPage errorMessage={errorMessage} retry={() => errorMessage = ''} />
+  </section>
 {:else if responseStore.response}
   {@const { info, steps } = responseStore.response}
-  <!-- Refresh by info.id to avoid switching between info and the container and card don't get updated -->
   {#key info.id}
-  <!-- Fixed width container due to its width doesn't constrained by its parent with grid display -->
-  <div bind:this={container} class="flex flex-col max-w-[88vw] lg:max-w-[60vw] gap-4 col-span-full row-span-full" in:fade>
-    <div class="flex items-center gap-2">
+  <article bind:this={container} class="flex flex-col max-w-[88vw] lg:max-w-[60vw] gap-4 col-span-full row-span-full" in:fade>
+    <header class="flex items-center gap-2">
       <h1 class="text-3xl font-bold">{info.title}</h1>
       <Badge category={info.category} icon={info.icon} />
-    </div>
+    </header>
 
-    <!-- Steps display -->
-    <ul class="steps bg-base-100 py-5 rounded-2xl">
-      {#each steps as step, i}
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-        <li
-          class="step cursor-pointer step-info text-info"
-          class:step-info={stepIndex === i}
-          class:text-info={stepIndex === i}
-          onclick={async () => {
-            if (container && cards[i]) {
-              await scrollIntoViewAndWait(container);
-              cards[i].scrollIntoView({ block: "nearest", behavior: "smooth" });
-            }
-          }}
-          data-content={step.icon}
-        >
-          {step.title}
-        </li>
-      {/each}
-    </ul>
+    <section aria-label="Steps">
+      <ul class="steps bg-base-100 py-5 rounded-2xl w-full">
+        {#each steps as step, i}
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+          <li
+            class="step cursor-pointer step-info text-info"
+            class:step-info={stepIndex === i}
+            class:text-info={stepIndex === i}
+            onclick={async () => {
+              if (container && cards[i]) {
+                await scrollIntoViewAndWait(container);
+                cards[i].scrollIntoView({ block: "nearest", behavior: "smooth" });
+              }
+            }}
+            data-content={step.icon}
+          >
+            {step.title}
+          </li>
+        {/each}
+      </ul>
+    </section>
 
-    <div class="w-full overflow-scroll snap-x snap-mandatory scroll-auto no-scrollbar">
-      <section class="flex gap-36 justify-between w-fit">
+    <section class="w-full overflow-scroll snap-x snap-mandatory scroll-auto no-scrollbar" aria-label="Task steps">
+      <div class="flex gap-36 justify-between w-fit">
         {#each steps as step, i}
           <div bind:this={cards[i]} data-index={i}>
             <ResultCard step={step} moneyUnit={info.moneyUnit} />
           </div>
         {/each}
-      </section>
-    </div>
+      </div>
+    </section>
 
-    <ProgressCard total={totalTasks} current={completedTasks} />
-  </div>
+    <section aria-label="Progress">
+      <ProgressCard total={totalTasks} current={completedTasks} />
+    </section>
+  </article>
   {/key}
 {/if}
-</div>
+</section>

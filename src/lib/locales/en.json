@@ -6,5 +6,21 @@
   "Your previous sessions display here": "Your previous sessions display here",
   "Your Progress": "Your Progress",
   "Create A New Todo": "Create A New Todo",
-  "Previous Todos": "Previous Todos"
+  "Previous Todos": "Previous Todos",
+  "Change language": "Change language",
+  "Change theme": "Change theme",
+  "Generating response, please wait...": "Generating response, please wait...",
+  "Oops! The request isn't working...": "Oops! The request isn't working...",
+  "Please try to fix it by checking the error message above. Afterward you can retry.": "Please try to fix it by checking the error message above. Afterward you can retry",
+  "Retry": "Retry",
+  "Confirm": "Confirm",
+  "Close": "Close",
+  "You're going to delete": "You're going to delete",
+  "This action can't be recovered. Are you sure?": "This action can't be recovered. Are you sure?",
+  "Deleting Todo": "Deleting Todo",
+  "Deleting...": "Deleting...",
+  "Delete success": "Delete success",
+  "Delete failed": "Delete failed",
+  "Congrats! You have finished your todo!": "Congrats! You have finished your todo!",
+  ".": "."
 }
